@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import { getSession } from "@/lib/auth";
 
 const schema = z.object({
   title: z.string().min(5),
@@ -17,6 +18,12 @@ function makeRef() {
 }
 
 export async function POST(req: Request) {
+  // 1. Re-added the session check
+  const s = await getSession();
+  if (!s || s.role !== "CITIZEN") {
+    return NextResponse.json({ error: "You must be logged in to submit a request." }, { status: 401 });
+  }
+
   const form = await req.formData();
   const parsed = schema.safeParse({
     title: form.get("title"),
@@ -38,11 +45,12 @@ export async function POST(req: Request) {
     imageData = `data:${file.type};base64,${buf.toString("base64")}`;
   }
 
-   const created = await prisma.request.create({
+  // 2. Using s.userId correctly
+  const created = await prisma.request.create({
     data: { 
       reference: makeRef(), 
       imageData, 
-      citizen: { connect: { id: s.userId } }, // <--- FIXED HERE
+      citizen: { connect: { id: s.userId } }, 
       ...parsed.data 
     },
   });
