@@ -32,6 +32,6 @@ Built for the Murang'a County context, utilizing local sub-counties, landmarks, 
 
 1. **Clone & Install:**
    ```bash
-   git clone <your-repo-link>
+   git clone [<your-repo-link>](https://github.com/aizooh/muranga-psrs.git)
    cd psrs
    pnpm install# muranga-psrs
