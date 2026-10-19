@@ -1,0 +1,64 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         String    @default("CITIZEN")
+  createdAt    DateTime  @default(now())
+  requests     Request[]
+
+  @@index([role])
+}
+
+model Request {
+  id          String    @id @default(cuid())
+  reference   String    @unique
+  citizenId   String                              // required now
+
+  title       String    @default("Untitled Issue")
+  subCounty   String    @default("Murang'a Town")
+  severity    String    @default("MEDIUM")        // LOW | MEDIUM | HIGH | CRITICAL
+  department  String?
+
+  category    String
+  location    String
+  landmark    String?
+  description String
+  imageData   String?
+  status      String    @default("UNASSIGNED")    // UNASSIGNED | IN_PROGRESS | RESOLVED
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  resolvedAt  DateTime?
+
+  citizen     User      @relation(fields: [citizenId], references: [id])
+  events      RequestEvent[]
+
+  @@index([status])
+  @@index([citizenId])
+}
+
+model RequestEvent {
+  id         String   @id @default(cuid())
+  requestId  String
+  fromStatus String?
+  toStatus   String
+  note       String?
+  actorId    String?
+  createdAt  DateTime @default(now())
+
+  request    Request  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId, createdAt])
+  @@index([actorId])
+}
