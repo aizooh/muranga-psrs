@@ -1,14 +1,17 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaLibSQL } from "@prisma/adapter-libsql";
+import { createClient } from "@libsql/client";
 import bcrypt from "bcryptjs";
 
-// Connect to Turso if env vars are present, otherwise use local SQLite
-const adapter = process.env.TURSO_DATABASE_URL
-  ? new PrismaLibSQL({
-      url: process.env.TURSO_DATABASE_URL,
-      authToken: process.env.TURSO_AUTH_TOKEN,
-    })
-  : undefined;
+let adapter: PrismaLibSQL | undefined;
+
+if (process.env.TURSO_DATABASE_URL) {
+  const libsql = createClient({
+    url: process.env.TURSO_DATABASE_URL,
+    authToken: process.env.TURSO_AUTH_TOKEN,
+  });
+  adapter = new PrismaLibSQL(libsql);
+}
 
 const db = new PrismaClient(adapter ? { adapter } : undefined);
 
@@ -48,7 +51,7 @@ async function main() {
     });
     await db.requestEvent.create({ data: { requestId: r.id, toStatus: status, note: "Seeded data" } });
   }
-  console.log("Cloud DB Seeded successfully!");
+  console.log("Seeded successfully!");
 }
 
 main().finally(() => db.$disconnect());
