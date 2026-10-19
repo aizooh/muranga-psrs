@@ -2,16 +2,16 @@ import { PrismaClient } from "@prisma/client";
 import { PrismaLibSQL } from "@prisma/adapter-libsql";
 import { createClient } from "@libsql/client";
 
-const isProd = process.env.NODE_ENV === "production";
-// Accept either DATABASE_URL or TURSO_DATABASE_URL
-const url = process.env.DATABASE_URL || process.env.TURSO_DATABASE_URL;
+const authToken = process.env.TURSO_AUTH_TOKEN;
+const url = process.env.TURSO_DATABASE_URL || process.env.DATABASE_URL;
 
 let adapter: PrismaLibSQL | undefined;
 
-if (isProd && url) {
+// FORCE Turso adapter if the token exists (meaning we are in production)
+if (authToken) {
   const libsql = createClient({
-    url: url,
-    authToken: process.env.TURSO_AUTH_TOKEN,
+    url: url || "libsql://placeholder.turso.io", // Prevent crash if URL is missing
+    authToken: authToken,
   });
   adapter = new PrismaLibSQL(libsql);
 }
