@@ -34,4 +34,4 @@ Built for the Murang'a County context, utilizing local sub-counties, landmarks, 
    ```bash
    git clone <your-repo-link>
    cd psrs
-   pnpm install
+   pnpm install# muranga-psrs
